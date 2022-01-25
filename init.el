@@ -778,8 +778,8 @@
         vhdl-file-header "
 -------------------------------------------------------------------------------
 -- File       : <file_name>
--- Author     : Dion Barrick x24308
--- Company    : JHU/APL
+-- Author     : <name>
+-- Company    : <company>
 -- Created    : 2020-04-17
 -- Last update: 2020-04-20
 -- Platform   :
@@ -791,7 +791,7 @@
 -------------------------------------------------------------------------------
 -- Revisions  :
 -- Date        Version  Author  Description
--- 2020-04-17  1.0      barridd1 Created
+-- 2020-04-17  1.0      <username> Created
 -------------------------------------------------------------------------------
 
 library ieee;
