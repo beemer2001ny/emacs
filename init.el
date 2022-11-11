@@ -239,7 +239,6 @@
   ("j" text-scale-increase "in")
   ("k" text-scale-decrease "out")
   ("f" nil "finished" :exit t))
-
 ;(leader-keys
 ;  "ts" '(hydra-text-scale/body :which-key "scale text"))
 
@@ -309,7 +308,10 @@
 
 (use-package spacemacs-common
   :ensure spacemacs-theme
-  :init (load-theme 'spacemacs-dark t))
+  :config
+  (setq spacemacs-theme-comment-bg nil
+	spacemacs-theme-common-italic nil)
+  (load-theme 'spacemacs-dark t))
 
 (use-package doom-modeline
   :ensure t
