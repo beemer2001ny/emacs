@@ -33,7 +33,6 @@
 (require 'package)
 (setq package-archives '(("melpa" . "https://melpa.org/packages/")
                          ("org" . "https://orgmode.org/elpa/")
-			 ;;("marmalade"    . "http://marmalade-repo.org/packages/")
                          ("elpa" . "https://elpa.gnu.org/packages/")))
 (package-initialize)
 (unless package-archive-contents
@@ -278,6 +277,13 @@
   (ivy-prescient-mode 1))
 
 ;;==============================================================================
+;; integrate git
+(use-package magit
+  :commands (magit-status magit-get-current-branch)
+  :custom
+  (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
+
+;;==============================================================================
 (use-package projectile
   :diminish projectile-mode
   :config (projectile-mode)
@@ -298,23 +304,17 @@
 ;; themes
 ;;(use-package doom-themes
 ;;  :init (load-theme 'doom-palenight t))
+;;(use-package doom-themes
+;;  :init (load-theme 'doom-one t))
 
 (use-package spacemacs-common
   :ensure spacemacs-theme
   :init (load-theme 'spacemacs-dark t))
 
-;;  :init (load-theme 'spacemacs-dark t))
-
-
-
-
 (use-package doom-modeline
   :ensure t
   :init (doom-modeline-mode 1)
   :custom ((doom-modeline-height 15)))
-
-;;(use-package doom-themes
-;;  :init (load-theme 'doom-one t))
 
 ;;==============================================================================
 (use-package rainbow-delimiters
