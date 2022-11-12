@@ -169,7 +169,10 @@
 
 ;;==============================================================================
 ;; install the the fonts package
+;; https://github.com/domtronn/all-the-icons.el#installing-fonts
+;; install in the following locations:
 ;; win10 - c:\windows\font
+;; linux - 
 (use-package all-the-icons
   :ensure t)
 
@@ -193,6 +196,7 @@
   (setq dashboard-set-heading-icons t)
   (setq dashboard-set-file-icons t)
   (setq dashboard-banner-logo-title "Emacs Is More Than A Text Editor!")
+  (setq dashboard-set-footer nil)       ;; disable random messages at startup
   (setq dashboard-startup-banner 'logo) ;; use standard emacs logo as banner
   ;;(setq dashboard-startup-banner "~/.emacs.d/emacs-dash.png")  ;; use custom image as banner
   (setq dashboard-center-content nil) ;; set to 't' for centered content
@@ -276,13 +280,18 @@
   (ivy-prescient-mode 1))
 
 ;;==============================================================================
-;; integrate git
+;; magit used to integrate git
 (use-package magit
   :commands (magit-status magit-get-current-branch)
   :custom
   (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
 
 ;;==============================================================================
+;; org mode
+
+
+;;==============================================================================
+;; projectile
 (use-package projectile
   :diminish projectile-mode
   :config (projectile-mode)
@@ -305,7 +314,6 @@
 ;;  :init (load-theme 'doom-palenight t))
 ;;(use-package doom-themes
 ;;  :init (load-theme 'doom-one t))
-
 (use-package spacemacs-common
   :ensure spacemacs-theme
   :config
