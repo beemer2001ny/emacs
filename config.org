@@ -1,14 +1,15 @@
 #+TITLE: Emacs Config
 #+AUTHOR: Dion Barrick
-#+DESCRIPTION: Dion's personal Emacs config.
-#+STARTUP: showeverything
+#+PROPERTY: header-args:emacs-lisp :tangle ./init-new.el
+#+DESCRIPTION: Dion's personal Emacs config
 #+EXPORT_FILE_NAME: ~/projects/org/html/config.html
 #+OPTIONS: num:nil ^:{}
-
+   
 * ABOUT THIS CONFIG
 This is my personal Emacs config. This is my personal Emacs config. This is my personal Emacs config.This is my personal Emacs config.This is my personal Emacs config.This is my personal Emacs config.This is my personal Emacs config.This is my personal Emacs config.This is my personal Emacs config.This is my personal Emacs config.This is my personal Emacs config.This is my personal Emacs config.This is my personal Emacs config.
-
+  
 ** setup package.el to work with melpa
+
 add Main Repositories for Emacs packages
 | refresh packages         | M-x | package-refresh-contents                   |
 | view packages            | M-x | package-list-packages                      |
@@ -16,6 +17,7 @@ add Main Repositories for Emacs packages
 | view packages            | M-x | package-list-packages                      |
 | install a packge         | M-x | package-install <RET> <package_name> <RET> |
 | install the nexe package | MMM | what ish the drive                         |
+|                          |     |                                            |
 #+begin_src emacs-lisp
   (require 'package)
   (setq package-archives '(("melpa" . "https://melpa.org/packages/")
@@ -39,10 +41,6 @@ Install use-package and enable ':ensure t' globally.  The ':ensure' keyword caus
   (setq use-package-always-ensure t)  
 #+end_src
 
-;; =============================================================================
-;; load custom file setups
-;;(setq custom-file "~/.emacs.d/custom-file.el")
-;;(load-file custom-file)
 ** auto-package-update
 #+begin_src emacs-lisp
   (use-package auto-package-update
@@ -60,43 +58,43 @@ Install use-package and enable ':ensure t' globally.  The ':ensure' keyword caus
   ;; The default is 800 kilobytes.  Measured in bytes.
   (setq gc-cons-threshold (* 50 1000 1000))
 
-  (defun efs/display-startup-time ()
+  (defun my/display-startup-time ()
     (message "Emacs loaded in %s with %d garbage collections."
 	     (format "%.2f seconds"
 		     (float-time
 		      (time-subtract after-init-time before-init-time)))
 	     gcs-done))
 
-  (add-hook 'emacs-startup-hook #'efs/display-startup-time)
+  (add-hook 'emacs-startup-hook #'my/display-startup-time)
 #+end_src
 
-** Global Settings
+** global settings
 bunch of global settings at startup
 Disable line numbers for some modes
 key bindings
 #+begin_src emacs-lisp
   (defalias 'yes-or-no-p 'y-or-n-p)    ; answer emacs
   (setq inhibit-startup-message t)     ; ignore splash screen
-  (scroll-bar-mode -1)		       ; disable scroll bar
-  (tool-bar-mode -1)		       ; remove toolbar
-  (tooltip-mode -1)		       ; disable tooltips
-  (set-fringe-mode 10)		       ; sets side bar limits
-  (menu-bar-mode 1)		       ; disable menu bar
-  (column-number-mode)		       ; display column number
-  (setq size-indication-mode t)	       ; display location percentage of buffer
-  (display-time)		       ; to display time in the status bar
+  (scroll-bar-mode -1)                 ; disable scroll bar
+  (tool-bar-mode -1)                   ; remove toolbar
+  (tooltip-mode -1)                    ; disable tooltips
+  (set-fringe-mode 10)                 ; sets side bar limits
+  (menu-bar-mode 1)                    ; disable menu bar
+  (column-number-mode)                 ; display column number
+  (setq size-indication-mode t)        ; display location percentage of buffer
+  (display-time)                       ; to display time in the status bar
   (setq minibuffer-max-depth nil)      ; set minibuffer max depth to ignore
-  (setq bell-volumne 0)		       ; turn off bell
-  (setq visual-bell t)		       ; set visual bell
+  (setq bell-volumne 0)                ; turn off bell
+  (setq visual-bell t)                 ; set visual bell
   (setq makefile-electric-keys t)      ; install electric key bindings for makefile mode
   (global-display-line-numbers-mode t) ; display line number
 
   ;; Disable line numbers for some modes
   (dolist (mode '(org-mode-hook
-		  term-mode-hook
-		  shell-mode-hook
-		  treemacs-mode-hook
-		  eshell-mode-hook))
+                  term-mode-hook
+                  shell-mode-hook
+                  treemacs-mode-hook
+                  eshell-mode-hook))
     (add-hook mode (lambda () (display-line-numbers-mode 0))))
 
   ;; Key Bindings
@@ -320,52 +318,52 @@ magit used to integrate git
 #+end_src
 
 ** org-mode
-life is worth living with org-mode
+life is worth living with org-mode life is worth living with org-modelife is worth living with org-mode life is worth living with org-modelife is worth living with org-modelife is worth living with org-modelife is worth living with org-modelife is worth living with org-mode 
 #+begin_src emacs-lisp
-    (defun my/org-mode-setup ()
-      (org-indent-mode)
-      (variable-pitch-mode 1)
-      (visual-line-mode 1))
 
-   (use-package org
+  (defun my/org-mode-setup ()
+    (org-indent-mode)
+    (variable-pitch-mode 1)
+    (visual-line-mode 1))
+
+  (defun my/org-font-setup ()
+    ;; Replace list hyphen with dot
+    (font-lock-add-keywords 'org-mode
+                            '(("^ *\\([-]\\) "
+                               (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+
+    ;; Set faces for heading levels
+    (dolist (face '((org-level-1 . 1.2)
+                    (org-level-2 . 1.1)
+                    (org-level-3 . 1.05)
+                    (org-level-4 . 1.0)
+                    (org-level-5 . 1.1)
+                    (org-level-6 . 1.1)
+                    (org-level-7 . 1.1)
+                    (org-level-8 . 1.1)))
+      (set-face-attribute (car face) nil :font "DejaVu Sans Mono" :weight 'regular :height (cdr face)))
+
+    ;; Ensure that anything that should be fixed-pitch in Org files appears that way
+    (set-face-attribute 'org-block nil :foreground nil :inherit 'fixed-pitch)
+    (set-face-attribute 'org-code nil :inherit '(shadow fixed-pitch))
+    (set-face-attribute 'org-table nil :inherit '(shadow fixed-pitch))
+    (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
+    (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
+    (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
+    (set-face-attribute 'org-checkbox nil :inherit 'fixed-pitch))
+
+  (use-package org
+    :ensure nil
     :hook (org-mode . my/org-mode-setup)
     :config
-    (setq org-ellipsis " ..."))
-;;    (my/org-font-setup))
-
-    ;;;(defun my/org-font-setup ()
-    ;;;  ;; Replace list hyphen with dot
-    ;;;  (font-lock-add-keywords 'org-mode
-    ;;;    		      '(("^ *\\([-]\\) "
-    ;;;    			 (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
-    ;;; 
-    ;;;  ;; Set faces for heading levels
-    ;;;  (dolist (face '((org-level-1 . 1.2)
-    ;;;    	      (org-level-2 . 1.1)
-    ;;;    	      (org-level-3 . 1.05)
-    ;;;    	      (org-level-4 . 1.0)
-    ;;;    	      (org-level-5 . 1.1)
-    ;;;    	      (org-level-6 . 1.1)
-    ;;;    	      (org-level-7 . 1.1)
-    ;;;    	      (org-level-8 . 1.1)))
-    ;;;  (set-face-attribute (car face) nil :font "Cantarell" :weight 'regular :height (cdr face)))
-    ;;; 
-    ;;;  ;; Ensure that anything that should be fixed-pitch in Org files appears that way
-    ;;;  (set-face-attribute 'org-block nil :foreground nil :inherit 'fixed-pitch)
-    ;;;  (set-face-attribute 'org-code nil   :inherit '(shadow fixed-pitch))
-    ;;;  (set-face-attribute 'org-table nil   :inherit '(shadow fixed-pitch))
-    ;;;  (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
-    ;;;  (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
-    ;;;  (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
-    ;;;  (set-face-attribute 'org-checkbox nil :inherit 'fixed-pitch))
-
-
+    (setq org-ellipsis " ▾")
+    (my/org-font-setup))
 
   (use-package org-bullets
     :after org
     :hook (org-mode . org-bullets-mode)
     :custom
-    (setq org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
+    (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
 
   (defun my/org-mode-visual-fill ()
     (setq visual-fill-column-width 100
@@ -374,8 +372,25 @@ life is worth living with org-mode
 
   (use-package visual-fill-column
     :hook (org-mode . my/org-mode-visual-fill))
-#+end_src
 
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((emacs-lisp . t)
+     (org . t)
+     ))
+
+  (push '("conf-unix" . conf-unix) org-src-lang-modes)
+
+  ;; Automatically tangle our Emacs.org config file when we save it
+  (defun my/org-babel-tangle-config ()
+    (when (string-equal (buffer-file-name)
+                        (expand-file-name "~/.emacs.d/config.org"))
+      ;; Dynamic scoping to the rescue
+      (let ((org-confirm-babel-evaluate nil))
+        (org-babel-tangle))))
+
+  (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'my/org-babel-tangle-config)))
+#+end_src
 ** projectile
 #+begin_src emacs-lisp
   (use-package projectile
@@ -397,23 +412,25 @@ life is worth living with org-mode
 
 ** theme
 #+begin_src emacs-lisp
-;;==============================================================================
-;; themes
-;;(use-package doom-themes
-;;  :init (load-theme 'doom-palenight t))
-;;(use-package doom-themes
-;;  :init (load-theme 'doom-one t))
-(use-package spacemacs-common
-  :ensure spacemacs-theme
-  :config
-  (setq spacemacs-theme-comment-bg nil
-	spacemacs-theme-common-italic nil)
-  (load-theme 'spacemacs-dark t))
- 
-(use-package doom-modeline
-  :ensure t
-  :init (doom-modeline-mode 1)
-  :custom ((doom-modeline-height 15)))
+  ;;==============================================================================
+  ;; themes
+  ;;(use-package doom-themes
+  ;;  :init (load-theme 'doom-palenight t))
+  ;;(use-package doom-themes
+  ;;  :init (load-theme 'doom-one t))
+  ;;(use-package doom-themes
+  ;;  :init (load-theme 'doom-dracula t))
+  (use-package spacemacs-common
+    :ensure spacemacs-theme
+    :config
+    (setq spacemacs-theme-comment-bg nil
+          spacemacs-theme-common-italic nil)
+    (load-theme 'spacemacs-dark t))
+
+  (use-package doom-modeline
+    :ensure t
+    :init (doom-modeline-mode 1)
+    :custom ((doom-modeline-height 15)))
 #+end_src
 
 ** rainbow-delimiters
@@ -437,54 +454,54 @@ my vhdl mode settings
   (use-package vhdl-mode
     :init
     :bind (:map vhdl-mode-map
-		("S-<f1>" . vhdl-speedbar))
+                ("S-<f1>" . vhdl-speedbar))
     :config
     (setq vhdl-speedbar-update-on-saving t
-	  vhdl-clock-name "i_clk"
-	  vhdl-clock-rising-edge t
-	  vhdl-clock-edge-condition 'function
-	  ;; RESET
-	  vhdl-reset-kind 'sync
-	  vhdl-reset-name "i_rst"
-	  vhdl-reset-active-high t
-	  ;; COMMENTS
-	  vhdl-self-insert-comments nil
-	  vhdl-include-port-comments nil
-	  vhdl-include-direction-comments nil
-	  vhdl-include-type-comments nil
-	  vhdl-include-group-comments 'always
-	  vhdl-end-comment-column 80
-	  vhdl-inline-comment-column 40
-	  vhdl-stutter-mode t
-	  vhdl-comment-inline-offset 2
-	  vhdl-comment-empty-lines t
-	  ;; GENERAL
-	  vhdl-standard '(93 nil)
-	  vhdl-indent-tabs-mode nil
-	  vhdl-basic-offset 2
-	  vhdl-electric-mode t
-	  vhdl-index-menu t
-	  vhdl-source-file-menu t
-	  vhdl-insert-empty-lines nil
-	  vhdl-upper-case-keywords nil
-	  vhdl-upper-case-types nil
-	  vhdl-upper-case-attributes nil
-	  vhdl-upper-case-enum-values nil
-	  vhdl-highlight-case-sensitive nil
-	  vhdl-highlight-translate-off nil
-	  vhdl-word-completion-case-sensitive nil
-	  vhdl-underscore-is-part-of-word t
-	  vhdl-align-groups nil
-	  vhdl-fixup-whitespace-region t
-	  vhdl-conditions-in-parenthesis t
-	  vhdl-optional-labels 'process
-	  ;; PORT MAPS
-	  vhdl-actual-port-name '(".*" . "\\&")
-	  ;; INSTANCE
-	  vhdl-instance-name '(".*" . "u_\\& ")
-	  vhdl-component-instance t
-	  ;; VHDL HEADER
-	  vhdl-file-header "-------------------------------------------------------------------------------
+          vhdl-clock-name "i_clk"
+          vhdl-clock-rising-edge t
+          vhdl-clock-edge-condition 'function
+          ;; RESET
+          vhdl-reset-kind 'sync
+          vhdl-reset-name "i_rst"
+          vhdl-reset-active-high t
+          ;; COMMENTS
+          vhdl-self-insert-comments nil
+          vhdl-include-port-comments nil
+          vhdl-include-direction-comments nil
+          vhdl-include-type-comments nil
+          vhdl-include-group-comments 'always
+          vhdl-end-comment-column 80
+          vhdl-inline-comment-column 40
+          vhdl-stutter-mode t
+          vhdl-comment-inline-offset 2
+          vhdl-comment-empty-lines t
+          ;; GENERAL
+          vhdl-standard '(93 nil)
+          vhdl-indent-tabs-mode nil
+          vhdl-basic-offset 2
+          vhdl-electric-mode t
+          vhdl-index-menu t
+          vhdl-source-file-menu t
+          vhdl-insert-empty-lines nil
+          vhdl-upper-case-keywords nil
+          vhdl-upper-case-types nil
+          vhdl-upper-case-attributes nil
+          vhdl-upper-case-enum-values nil
+          vhdl-highlight-case-sensitive nil
+          vhdl-highlight-translate-off nil
+          vhdl-word-completion-case-sensitive nil
+          vhdl-underscore-is-part-of-word t
+          vhdl-align-groups nil
+          vhdl-fixup-whitespace-region t
+          vhdl-conditions-in-parenthesis t
+          vhdl-optional-labels 'process
+          ;; PORT MAPS
+          vhdl-actual-port-name '(".*" . "\\&")
+          ;; INSTANCE
+          vhdl-instance-name '(".*" . "u_\\& ")
+          vhdl-component-instance t
+          ;; VHDL HEADER
+          vhdl-file-header "-------------------------------------------------------------------------------
   -- Author      : <name>
   -- Filename    : <filename>
   -- Date	       : <date>
