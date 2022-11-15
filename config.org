@@ -1,6 +1,6 @@
 #+TITLE: Emacs Config
 #+AUTHOR: Dion Barrick
-#+PROPERTY: header-args:emacs-lisp :tangle ./config.el
+#+PROPERTY: header-args:emacs-lisp :tangle ./config.el :mkdirp yes
 #+DESCRIPTION: Dion's personal Emacs config
 #+EXPORT_FILE_NAME: ~/projects/org/html/config.html
 #+OPTIONS: num:nil ^:{}
@@ -8,7 +8,7 @@
 * ABOUT THIS CONFIG
 This is my personal Emacs config. This is my personal Emacs config. This is my personal Emacs config.This is my personal Emacs config.This is my personal Emacs config.This is my personal Emacs config.This is my personal Emacs config.This is my personal Emacs config.This is my personal Emacs config.This is my personal Emacs config.This is my personal Emacs config.This is my personal Emacs config.This is my personal Emacs config.
   
-** setup package.el to work with melpa
+** setup package
 
 add Main Repositories for Emacs packages
 | refresh packages         | M-x | package-refresh-contents                   |
@@ -26,7 +26,7 @@ add Main Repositories for Emacs packages
   (package-initialize)
 #+end_src
 
-** setup use-Package
+** use-package
 Install use-package and enable ':ensure t' globally.  The ':ensure' keyword causes the package(s) within use-package statements to be installed automatically if not already present on your system.  To avoid having to add ':ensure t' to every use-package statement in this config, I set 'use-package-always-ensure'.
 
 #+begin_src emacs-lisp
@@ -113,17 +113,21 @@ key bindings
 #+end_src
 
 ** cue-mode
-Highlight and overwrite selected regions
+Copy / Paste / multiline editing
+
 #+begin_src emacs-lisp
   (cua-mode 1)
-  (setq cua-enable-cua-keys nil)
+  (setq cua-enable-cua-keys t)
   (setq cua-enable-modeline-indications t)
-  (setq cua-remap-control-v nil)
-  (setq cua-remap-control-z nil)
+  (setq cua-remap-control-c t)
+  (setq cua-remap-control-x t)
+  (setq cua-remap-control-v t)
+  (setq cua-remap-control-z t)
 #+end_src
 
 ** marking text and cursor
-
+make copy / paste play nice with others
+change color of cursor base on editing mode
 #+begin_src emacs-lisp
   ;;==============================================================================
   ;; marking text
@@ -228,6 +232,14 @@ used for startup for recent files
 			    (bookmarks . "book"))))
 #+end_src
 
+** doom-modeline
+#+begin_src emacs-lisp
+  (use-package doom-modeline
+    :ensure t
+    :init (doom-modeline-mode 1)
+    :custom ((doom-modeline-height 15)))
+#+end_src
+
 ** general
 not used at the moment
 #+begin_src emacs-lisp
@@ -320,7 +332,6 @@ magit used to integrate git
 ** org-mode
 life is worth living with org-mode life is worth living with org-modelife is worth living with org-mode life is worth living with org-modelife is worth living with org-modelife is worth living with org-modelife is worth living with org-modelife is worth living with org-mode 
 #+begin_src emacs-lisp
-
   (defun my/org-mode-setup ()
     (org-indent-mode)
     (variable-pitch-mode 1)
@@ -391,9 +402,11 @@ life is worth living with org-mode life is worth living with org-modelife is wor
 
   (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'my/org-babel-tangle-config)))
 #+end_src
+
 ** projectile
 #+begin_src emacs-lisp
   (use-package projectile
+    :ensure t
     :diminish projectile-mode
     :config (projectile-mode)
     :custom ((projectile-completion-system 'ivy))
@@ -426,11 +439,6 @@ life is worth living with org-mode life is worth living with org-modelife is wor
     (setq spacemacs-theme-comment-bg nil
           spacemacs-theme-common-italic nil)
     (load-theme 'spacemacs-dark t))
-
-  (use-package doom-modeline
-    :ensure t
-    :init (doom-modeline-mode 1)
-    :custom ((doom-modeline-height 15)))
 #+end_src
 
 ** rainbow-delimiters
