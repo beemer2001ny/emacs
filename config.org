@@ -7,6 +7,9 @@
    
 * ABOUT THIS CONFIG
 This is my personal Emacs config. This is my personal Emacs config. This is my personal Emacs config.This is my personal Emacs config.This is my personal Emacs config.This is my personal Emacs config.This is my personal Emacs config.This is my personal Emacs config.This is my personal Emacs config.This is my personal Emacs config.This is my personal Emacs config.This is my personal Emacs config.This is my personal Emacs config.
+
+reminder if a package doesn't install run the following:
+package-refresh-contents 
   
 ** setup package
 
@@ -16,7 +19,7 @@ add Main Repositories for Emacs packages
 | refresh packages         | M-x | package-refresh-contents                   |
 | view packages            | M-x | package-list-packages                      |
 | install a packge         | M-x | package-install <RET> <package_name> <RET> |
-| install the nexe package | MMM | what ish the drive                         |
+| install the nexe package | M-x | what ish the drive                         |
 |                          |     |                                            |
 #+begin_src emacs-lisp
   (require 'package)
@@ -74,19 +77,19 @@ Disable line numbers for some modes
 key bindings
 #+begin_src emacs-lisp
   (defalias 'yes-or-no-p 'y-or-n-p)    ; answer emacs
-  (setq inhibit-startup-message t)     ; ignore splash screen
+  (setq inhibit-startup-message t      ; ignore splash screen
+        size-indication-mode t         ; display location percentage of buffer
+        minibuffer-max-depth nil       ; set minibuffer max depth to ignore
+        bell-volumne 0                 ; turn off bell
+        visual-bell t                  ; set visual bell
+        makefile-electric-keys t)      ; install electric key bindings for makefile mode
   (scroll-bar-mode -1)                 ; disable scroll bar
   (tool-bar-mode -1)                   ; remove toolbar
   (tooltip-mode -1)                    ; disable tooltips
   (set-fringe-mode 10)                 ; sets side bar limits
   (menu-bar-mode 1)                    ; disable menu bar
   (column-number-mode)                 ; display column number
-  (setq size-indication-mode t)        ; display location percentage of buffer
   (display-time)                       ; to display time in the status bar
-  (setq minibuffer-max-depth nil)      ; set minibuffer max depth to ignore
-  (setq bell-volumne 0)                ; turn off bell
-  (setq visual-bell t)                 ; set visual bell
-  (setq makefile-electric-keys t)      ; install electric key bindings for makefile mode
   (global-display-line-numbers-mode t) ; display line number
 
   ;; Disable line numbers for some modes
@@ -181,6 +184,20 @@ change color of cursor base on editing mode
   (add-hook 'post-command-hook 'djcb-set-cursor-according-to-mode)
 #+end_src
 
+** abbrev
+from : https://github.com/rememberYou/.emacs.d/blob/master/config.org
+spelling help
+#+begin_src emacs-lisp
+  (use-package abbrev
+    :ensure nil
+    :delight
+    :hook (text-mode . abbrev-mode)
+    ;;:custom (abbrev-file-name (expand-file-name (format "%s/emacs/abbrev_defs" xdg-data)))
+    :config
+    (if (file-exists-p abbrev-file-name)
+        (quietly-read-abbrev-file)))
+  #+end_src
+  
 ** all-the-icons
 install the the fonts package
 https://github.com/domtronn/all-the-icons.el#installing-fonts
@@ -192,10 +209,144 @@ linux -
     :ensure t)
   #+end_src
 
-** global-command-log-mode
+** async
+from: https://github.com/rememberYou/.emacs.d/blob/master/config.org
+A good practice is to use an .org file to modify your GNU Emacs configuration with org-mode and to load this configuration via an .el file. This way you can maintain an org-mode configuration and still get a faster load.
+
+Using the async package and the org-babel-tangle command, the code below will executes org-babel-tangle asynchronously when config.org is saved, to update the config.el file. From then on, you only need to add a add the my/config-tangle function to the after-save hook and specify the loading of the config.el file into the init.el file.
 #+begin_src emacs-lisp
-  (use-package command-log-mode
-    :commands command-log-mode)
+  (use-package async
+    :after org
+    :preface
+    (defvar config-file (expand-file-name "config.org" user-emacs-directory)
+      "The configuration file.")
+
+    (defvar config-last-change (nth 5 (file-attributes config-file))
+      "The last modification time of the configuration file.")
+
+    (defvar show-async-tangle-results nil
+      "Keep *emacs* async buffers around for later inspection.")
+
+    (defun my/config-tangle ()
+      "Tangle the org file asynchronously."
+      (when (my/config-updated)
+        (setq config-last-change
+              (nth 5 (file-attributes config-file)))
+        (my/async-babel-tangle config-file)))
+
+    (defun my/config-updated ()
+      "Check if the configuration file has been updated since the last time."
+      (time-less-p config-last-change
+                   (nth 5 (file-attributes config-file))))
+
+    (defun my/async-babel-tangle (org-file)
+      "Tangle the org file asynchronously."
+      (let ((init-tangle-start-time (current-time))
+            (file (buffer-file-name))
+            (async-quiet-switch "-q"))
+        (async-start
+         `(lambda ()
+            (require 'org)
+
+            (org-babel-tangle-file ,org-file))
+         (unless show-async-tangle-results
+           `(lambda (result)
+              (if result
+                  (message "[✓] %s successfully tangled (%.2fs)"
+                           ,org-file
+                           (float-time (time-subtract (current-time)
+                                                      ',init-tangle-start-time)))
+                (message "[✗] %s as tangle failed." ,org-file))))))))
+#+end_src
+
+#+RESULTS:
+
+** calc
+from: https://github.com/rememberYou/.emacs.d/blob/master/config.org
+#+begin_src emacs-lisp
+  (use-package calc
+    :ensure nil
+    :custom
+    (math-additional-units
+     '((GiB "1024 * MiB" "Giga Byte")
+       (MiB "1024 * KiB" "Mega Byte")
+       (KiB "1024 * B" "Kilo Byte")
+       (B nil "Byte")
+       (Gib "1024 * Mib" "Giga Bit")
+       (Mib "1024 * Kib" "Mega Bit")
+       (Kib "1024 * b" "Kilo Bit")
+       (b "B / 8" "Bit")))
+    ;; Resets the calc's cache.
+    (math-units-table nil))
+#+end_src
+
+** calendar
+from: https://github.com/rememberYou/.emacs.d/blob/master/config.org
+#+begin_src emacs-lisp
+  (use-package calendar
+    :ensure nil
+    :bind ("C-c 0" . calendar)
+    :custom
+    (calendar-mark-holidays-flag t)
+    (calendar-week-start-day 1))
+
+  ;; update as necessary
+  (use-package holidays
+  :ensure nil
+  :custom
+  (holiday-bahai-holidays nil)
+  (holiday-hebrew-holidays nil)
+  (holiday-islamic-holidays nil)
+  (holiday-oriental-holidays nil)
+  (holiday-christian-holidays
+   '((holiday-fixed 1 6 "Epiphany")
+     (holiday-fixed 2 2 "Candlemas")
+     (holiday-easter-etc -47 "Mardi Gras")
+     (holiday-easter-etc 0 "Easter Day")
+     (holiday-easter-etc 1 "Easter Monday")
+     (holiday-easter-etc 39 "Ascension")
+     (holiday-easter-etc 49 "Pentecost")
+     (holiday-fixed 8 15 "Assumption")
+     (holiday-fixed 11 1 "All Saints' Day")
+     (holiday-fixed 11 2 "Day of the Dead")
+     (holiday-fixed 11 22 "Saint Cecilia's Day")
+     (holiday-fixed 12 1 "Saint Eloi's Day")
+     (holiday-fixed 12 4 "Saint Barbara")
+     (holiday-fixed 12 6 "Saint Nicholas Day")
+     (holiday-fixed 12 25 "Christmas Day")))
+  (holiday-general-holidays
+   '((holiday-fixed 1 1 "New Year's Day")
+     (holiday-fixed 2 14 "Valentine's Day")
+     (holiday-fixed 3 8 "International Women's Day")
+     (holiday-fixed 10 31 "Halloween")
+     (holiday-fixed 11 11 "Armistice of 1918")))
+  (holiday-local-holidays
+   '((holiday-fixed 5 1 "Labor Day")
+     (holiday-float 3 0 0 "Grandmothers' Day")
+     (holiday-float 4 4 3 "Secretary's Day")
+     (holiday-float 5 0 2 "Mother's Day")
+     (holiday-float 6 0 2 "Father's Day")
+     (holiday-fixed 7 21 "Belgian National Day"))))
+#+end_src
+
+** company
+from: https://github.com/rememberYou/.emacs.d/blob/master/config.org
+Auto-completion with GNU Emacs is mainly combined with LSP mode. Therefore the development of any programming language is made easier with auto-completion, which involves a completion at point followed by the display of a small pop-in containing the candidates.
+#+begin_src emacs-lisp
+  (use-package company
+    :after lsp-mode
+    :hook (lsp-mode . company-mode)
+    :custom
+    (company-begin-commands '(self-insert-command))
+    (company-idle-delay 0.5)
+    (company-minimum-prefix-length 1)
+    (company-show-quick-access t)
+    (company-tooltip-align-annotations 't))
+
+  (use-package company-box
+    :if (display-graphic-p)
+    :after company
+    :hook (company-mode . company-box-mode))
 #+end_src
 
 ** counsel
@@ -240,6 +391,70 @@ used for startup for recent files
     :custom ((doom-modeline-height 15)))
 #+end_src
 
+** flyspell
+get hunspell from https://github.com/hunspell/hunspell following the instructions for installing on your platform.
+Note: no language file are installed.
+get language set from the following
+MacOS
+    1) brew install hunspell 
+    2) cd ~/Library/Spelling
+        wget http://cgit.freedesktop.org/libreoffice/dictionaries/plain/en/en_US.aff
+        wget http://cgit.freedesktop.org/libreoffice/dictionaries/plain/en/en_US.dic
+#+begin_src emacs-lisp
+  (use-package flyspell
+    :ensure nil
+    :delight
+    :hook ((text-mode . flyspell-mode)
+           (prog-mode . flyspell-prog-mode))
+    :custom
+    ;; Add correction to abbreviation table.
+    (flyspell-abbrev-p t)
+    (flyspell-default-dictionary "en_US")
+    (flyspell-issue-message-flag nil)
+    (flyspell-issue-welcome-flag nil))
+
+  (use-package ispell
+  :preface
+  (defun my/switch-language ()
+    "Switch between the English and French for ispell, flyspell, and LanguageTool."
+    (interactive)
+    (let* ((current-dictionary ispell-current-dictionary)
+           (new-dictionary (if (string= current-dictionary "en_US") "en_US")))
+      (flyspell-buffer)
+      (message "[✓] Dictionary switched to %s" new-dictionary)))
+  :custom
+  (ispell-hunspell-dict-paths-alist
+   '(("en_US" "~/Library/Spelling/en_US.aff")))
+  ;; Save words in the personal dictionary without asking.
+  (ispell-silently-savep t)
+  :config
+  (setenv "LANG" "en_US")
+  (cond ((executable-find "hunspell")
+         (setq ispell-program-name "hunspell")
+         (setq ispell-local-dictionary-alist '(("en_US"
+                                                "[[:alpha:]]"
+                                                "[^[:alpha:]]"
+                                                "['’-]"
+                                                t
+                                                ("-d" "en_US" )
+                                                nil
+                                                utf-8))))
+        ((executable-find "aspell")
+         (setq ispell-program-name "aspell")
+         (setq ispell-extra-args '("--sug-mode=ultra"))))
+  ;; Ignore file sections for spell checking.
+  (add-to-list 'ispell-skip-region-alist '("#\\+begin_align" . "#\\+end_align"))
+  (add-to-list 'ispell-skip-region-alist '("#\\+begin_align*" . "#\\+end_align*"))
+  (add-to-list 'ispell-skip-region-alist '("#\\+begin_equation" . "#\\+end_equation"))
+  (add-to-list 'ispell-skip-region-alist '("#\\+begin_equation*" . "#\\+end_equation*"))
+  (add-to-list 'ispell-skip-region-alist '("#\\+begin_example" . "#\\+end_example"))
+  (add-to-list 'ispell-skip-region-alist '("#\\+begin_labeling" . "#\\+end_labeling"))
+  (add-to-list 'ispell-skip-region-alist '("#\\+begin_src" . "#\\+end_src"))
+  (add-to-list 'ispell-skip-region-alist '("\\$" . "\\$"))
+  (add-to-list 'ispell-skip-region-alist '(org-property-drawer-re))
+  (add-to-list 'ispell-skip-region-alist '(":\\(PROPERTIES\\|LOGBOOK\\):" . ":END:")))
+    #+end_src
+    
 ** general
 not used at the moment
 #+begin_src emacs-lisp
@@ -258,6 +473,21 @@ not used at the moment
   ;;    "fde" '(lambda () (interactive) (find-file (expand-file-name "~/.emacs.d/Emacs.org")))))
  #+end_src
 
+** global-command-log-mode
+#+begin_src emacs-lisp
+  (use-package command-log-mode
+    :commands command-log-mode)
+#+end_src
+
+** grammer checker
+#+begin_src emacs-lisp
+  (use-package lsp-ltex
+    :disabled
+    :custom
+    (lsp-ltex-enabled nil)
+    (lsp-ltex-mother-tongue "en"))
+ #+end_src
+ 
 ** helpful
 used to find key bindings available
 #+begin_src emacs-lisp
@@ -272,6 +502,18 @@ used to find key bindings available
     ([remap describe-key] . helpful-key))
  #+end_src
 
+** history
+fast keybindings
+#+begin_src emacs-lisp
+  (use-package savehist
+    :ensure nil
+    :custom
+    (history-delete-duplicates t)
+    (history-length 25)
+    ;;(savehist-file (expand-file-name (format "%s/emacs/history" xdg-cache)))
+    :config (savehist-mode))
+ #+end_src
+ 
 ** hydra
 fast keybindings
 #+begin_src emacs-lisp
@@ -319,6 +561,40 @@ fast keybindings
     ;(prescient-persist-mode 1)
     (ivy-prescient-mode 1)) 
  #+end_src
+ 
+** lsp
+from: https://github.com/rememberYou/.emacs.d/blob/master/config.org
+The main benefit of using Language Server Protocol (LSP) to configure the management of your programming languages is that LSP servers are also used by other text editors, increasing contributions to these packages. What could be better than benefiting from the larger community, while keeping a quality text editor ;-)
+
+We need a Language Server Protocol (LSP) client to use different LSP servers according to the programming languages that we would like to use. That’s where lsp-mode comes in!
+#+begin_src emacs-lisp
+  (use-package lsp-mode
+    :commands (lsp lsp-deferred)
+    :hook ((prog-mode . lsp-deferred)
+           (lsp-mode . lsp-enable-which-key-integration))
+    :custom
+    (lsp-enable-folding nil)
+    (lsp-enable-links nil)
+    (lsp-enable-snippet nil)
+    (lsp-keymap-prefix "C-c ;")
+    ;;(lsp-session-file (expand-file-name (format "%s/emacs/lsp-session-v1"  xdg-data)))
+    (read-process-output-max (* 1024 1024)))
+
+  ;; additional information on variables
+  (use-package lsp-ui
+    :hook (lsp-mode . lsp-ui-mode))
+
+  ;; navigate errors
+  (use-package consult-lsp
+    :commands (consult-lsp-diagnostics consult-lsp-symbols))
+
+  ;; debugger
+  (use-package dap-mode
+    :after lsp-mode
+    :config
+    (dap-mode t)
+    (dap-ui-mode t))
+#+end_src
 
 ** magit
 magit used to integrate git
@@ -403,6 +679,85 @@ life is worth living with org-mode life is worth living with org-modelife is wor
   (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'my/org-babel-tangle-config)))
 #+end_src
 
+** programming modes
+my vhdl mode settings
+#+begin_src emacs-lisp
+  ;; bash
+  (use-package sh-script
+    :ensure nil
+    :hook (after-save . executable-make-buffer-file-executable-if-script-p))
+
+  ;; vhdl
+  (use-package vhdl-mode
+    :init
+    :bind (:map vhdl-mode-map
+                ("S-<f1>" . vhdl-speedbar))
+    :config
+    (setq vhdl-speedbar-update-on-saving t
+          vhdl-clock-name "i_clk"
+          vhdl-clock-rising-edge t
+          vhdl-clock-edge-condition 'function
+          ;; RESET
+          vhdl-reset-kind 'sync
+          vhdl-reset-name "i_rst"
+          vhdl-reset-active-high t
+          ;; COMMENTS
+          vhdl-self-insert-comments nil
+          vhdl-include-port-comments nil
+          vhdl-include-direction-comments nil
+          vhdl-include-type-comments nil
+          vhdl-include-group-comments 'always
+          vhdl-end-comment-column 80
+          vhdl-inline-comment-column 40
+          vhdl-stutter-mode t
+          vhdl-comment-inline-offset 2
+          vhdl-comment-empty-lines t
+          ;; GENERAL
+          vhdl-standard '(93 nil)
+          vhdl-indent-tabs-mode nil
+          vhdl-basic-offset 2
+          vhdl-electric-mode t
+          vhdl-index-menu t
+          vhdl-source-file-menu t
+          vhdl-insert-empty-lines nil
+          vhdl-upper-case-keywords nil
+          vhdl-upper-case-types nil
+          vhdl-upper-case-attributes nil
+          vhdl-upper-case-enum-values nil
+          vhdl-highlight-case-sensitive nil
+          vhdl-highlight-translate-off nil
+          vhdl-word-completion-case-sensitive nil
+          vhdl-underscore-is-part-of-word t
+          vhdl-align-groups nil
+          vhdl-fixup-whitespace-region t
+          vhdl-conditions-in-parenthesis t
+          vhdl-optional-labels 'process
+          ;; PORT MAPS
+          vhdl-actual-port-name '(".*" . "\\&")
+          ;; INSTANCE
+          vhdl-instance-name '(".*" . "u_\\& ")
+          vhdl-component-instance t
+          ;; VHDL HEADER
+          vhdl-file-header "-------------------------------------------------------------------------------
+    -- Author      : <name>
+    -- Filename    : <filename>
+    -- Date	       : <date>
+    -- Description :
+    --	       :
+    -- Revision    :
+    --
+    -------------------------------------------------------------------------------
+    -- PROPRIETARY INFORMATION:
+    -------------------------------------------------------------------------------
+
+    library ieee;
+    use ieee.std_logic_1164.all;
+    use ieee.numeric_std.all;
+
+    <cursor>")
+     )
+#+end_src
+
 ** projectile
 #+begin_src emacs-lisp
   (use-package projectile
@@ -456,76 +811,6 @@ life is worth living with org-mode life is worth living with org-modelife is wor
     (setq which-key-idle-delay 0.3))  
 #+end_src
 
-** vhdl-mode
-my vhdl mode settings
-#+begin_src emacs-lisp
-  (use-package vhdl-mode
-    :init
-    :bind (:map vhdl-mode-map
-                ("S-<f1>" . vhdl-speedbar))
-    :config
-    (setq vhdl-speedbar-update-on-saving t
-          vhdl-clock-name "i_clk"
-          vhdl-clock-rising-edge t
-          vhdl-clock-edge-condition 'function
-          ;; RESET
-          vhdl-reset-kind 'sync
-          vhdl-reset-name "i_rst"
-          vhdl-reset-active-high t
-          ;; COMMENTS
-          vhdl-self-insert-comments nil
-          vhdl-include-port-comments nil
-          vhdl-include-direction-comments nil
-          vhdl-include-type-comments nil
-          vhdl-include-group-comments 'always
-          vhdl-end-comment-column 80
-          vhdl-inline-comment-column 40
-          vhdl-stutter-mode t
-          vhdl-comment-inline-offset 2
-          vhdl-comment-empty-lines t
-          ;; GENERAL
-          vhdl-standard '(93 nil)
-          vhdl-indent-tabs-mode nil
-          vhdl-basic-offset 2
-          vhdl-electric-mode t
-          vhdl-index-menu t
-          vhdl-source-file-menu t
-          vhdl-insert-empty-lines nil
-          vhdl-upper-case-keywords nil
-          vhdl-upper-case-types nil
-          vhdl-upper-case-attributes nil
-          vhdl-upper-case-enum-values nil
-          vhdl-highlight-case-sensitive nil
-          vhdl-highlight-translate-off nil
-          vhdl-word-completion-case-sensitive nil
-          vhdl-underscore-is-part-of-word t
-          vhdl-align-groups nil
-          vhdl-fixup-whitespace-region t
-          vhdl-conditions-in-parenthesis t
-          vhdl-optional-labels 'process
-          ;; PORT MAPS
-          vhdl-actual-port-name '(".*" . "\\&")
-          ;; INSTANCE
-          vhdl-instance-name '(".*" . "u_\\& ")
-          vhdl-component-instance t
-          ;; VHDL HEADER
-          vhdl-file-header "-------------------------------------------------------------------------------
-  -- Author      : <name>
-  -- Filename    : <filename>
-  -- Date	       : <date>
-  -- Description :
-  --	       :
-  -- Revision    :
-  --
-  -------------------------------------------------------------------------------
-  -- PROPRIETARY INFORMATION:
-  -------------------------------------------------------------------------------
 
-  library ieee;
-  use ieee.std_logic_1164.all;
-  use ieee.numeric_std.all;
 
-  <cursor>")
-   )
-#+end_src
 
