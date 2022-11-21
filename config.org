@@ -19,7 +19,7 @@ add Main Repositories for Emacs packages
 | refresh packages         | M-x | package-refresh-contents                   |
 | view packages            | M-x | package-list-packages                      |
 | install a packge         | M-x | package-install <RET> <package_name> <RET> |
-| install the nexe package | M-x | what ish the drive                         |
+| install the next package | M-x | what is the drive                          |
 |                          |     |                                            |
 #+begin_src emacs-lisp
   (require 'package)
@@ -96,7 +96,7 @@ key bindings
   (dolist (mode '(org-mode-hook
                   term-mode-hook
                   shell-mode-hook
-                  treemacs-mode-hook
+                  ;;treemacs-mode-hook
                   eshell-mode-hook))
     (add-hook mode (lambda () (display-line-numbers-mode 0))))
 
@@ -113,6 +113,15 @@ key bindings
   (global-set-key (kbd "C-c C-c")  'comment-region)        ; comment region
   (global-set-key (kbd "C-=")      'text-scale-increase)   ; increase text
   (global-set-key (kbd "C--")      'text-scale-decrease)   ; decrease text
+#+end_src
+
+** backup-files
+Emacs automatically saves backup versions of file and clutters folders
+#+begin_src emacs-lisp
+  (setq backup-directory-alist
+  `((".*" . ,temporary-file-directory)))
+  (setq auto-save-file-name-transforms
+  `((".*" ,temporary-file-directory t)))
 #+end_src
 
 ** cue-mode
@@ -395,64 +404,94 @@ used for startup for recent files
 get hunspell from https://github.com/hunspell/hunspell following the instructions for installing on your platform.
 Note: no language file are installed.
 get language set from the following
-MacOS
-    1) brew install hunspell 
-    2) cd ~/Library/Spelling
+*** MacOS
+    1. git clone https://github.com/hunspell/hunspell
+       put it in your git projects folder
+    2. brew install hunspell
+    3. cd ~/Library/Spelling
         wget http://cgit.freedesktop.org/libreoffice/dictionaries/plain/en/en_US.aff
         wget http://cgit.freedesktop.org/libreoffice/dictionaries/plain/en/en_US.dic
-#+begin_src emacs-lisp
-  (use-package flyspell
-    :ensure nil
-    :delight
-    :hook ((text-mode . flyspell-mode)
-           (prog-mode . flyspell-prog-mode))
-    :custom
-    ;; Add correction to abbreviation table.
-    (flyspell-abbrev-p t)
-    (flyspell-default-dictionary "en_US")
-    (flyspell-issue-message-flag nil)
-    (flyspell-issue-welcome-flag nil))
 
-  (use-package ispell
-  :preface
-  (defun my/switch-language ()
-    "Switch between the English and French for ispell, flyspell, and LanguageTool."
-    (interactive)
-    (let* ((current-dictionary ispell-current-dictionary)
-           (new-dictionary (if (string= current-dictionary "en_US") "en_US")))
-      (flyspell-buffer)
-      (message "[✓] Dictionary switched to %s" new-dictionary)))
-  :custom
-  (ispell-hunspell-dict-paths-alist
-   '(("en_US" "~/Library/Spelling/en_US.aff")))
-  ;; Save words in the personal dictionary without asking.
-  (ispell-silently-savep t)
-  :config
-  (setenv "LANG" "en_US")
-  (cond ((executable-find "hunspell")
-         (setq ispell-program-name "hunspell")
-         (setq ispell-local-dictionary-alist '(("en_US"
-                                                "[[:alpha:]]"
-                                                "[^[:alpha:]]"
-                                                "['’-]"
-                                                t
-                                                ("-d" "en_US" )
-                                                nil
-                                                utf-8))))
-        ((executable-find "aspell")
-         (setq ispell-program-name "aspell")
-         (setq ispell-extra-args '("--sug-mode=ultra"))))
-  ;; Ignore file sections for spell checking.
-  (add-to-list 'ispell-skip-region-alist '("#\\+begin_align" . "#\\+end_align"))
-  (add-to-list 'ispell-skip-region-alist '("#\\+begin_align*" . "#\\+end_align*"))
-  (add-to-list 'ispell-skip-region-alist '("#\\+begin_equation" . "#\\+end_equation"))
-  (add-to-list 'ispell-skip-region-alist '("#\\+begin_equation*" . "#\\+end_equation*"))
-  (add-to-list 'ispell-skip-region-alist '("#\\+begin_example" . "#\\+end_example"))
-  (add-to-list 'ispell-skip-region-alist '("#\\+begin_labeling" . "#\\+end_labeling"))
-  (add-to-list 'ispell-skip-region-alist '("#\\+begin_src" . "#\\+end_src"))
-  (add-to-list 'ispell-skip-region-alist '("\\$" . "\\$"))
-  (add-to-list 'ispell-skip-region-alist '(org-property-drawer-re))
-  (add-to-list 'ispell-skip-region-alist '(":\\(PROPERTIES\\|LOGBOOK\\):" . ":END:")))
+*** Windows (cygwin)
+minimum will need to install python on the windows machine regardless if anaconda is already on
+    1. change the home directory in /etc/nsswitch.conf
+      db_home: /%H/
+    2. get the following packages:
+       autoconf
+       automake
+       dos2unix
+       gcc-g++ development package
+       gettext
+       gettext-devel
+       hunspell
+       libiconv
+       liblzma-devel
+       libtool
+       make
+       ncurses, readline (for user interface)
+       wget
+     3. cd ~/Library/Spelling
+        wget http://cgit.freedesktop.org/libreoffice/dictionaries/plain/en/en_US.aff
+        wget http://cgit.freedesktop.org/libreoffice/dictionaries/plain/en/en_US.dic
+     4. cd into the cloned hunspell directory
+         dos2unix all the files before installing
+     5. follow instructions on hunspell git page
+              
+#+begin_src emacs-lisp
+  ;;(add-to-list 'exec-path "C:\\cygwin64\\bin")
+  ;;(add-to-list 'exec-path "~\\Library\\\Spelling")
+  ;;(use-package flyspell
+  ;;  :ensure nil
+  ;;  :delight
+  ;;  :hook ((text-mode . flyspell-mode)
+  ;;         (prog-mode . flyspell-prog-mode))
+  ;;  :custom
+  ;;  ;; Add correction to abbreviation table.
+  ;;  (flyspell-abbrev-p t)
+  ;;  (flyspell-default-dictionary "en_US")
+  ;;  (flyspell-issue-message-flag nil)
+  ;;  (flyspell-issue-welcome-flag nil))
+
+  ;;(use-package ispell
+  ;;  :preface
+  ;;  (defun my/switch-language ()
+  ;;    "Switch between the English and French for ispell, flyspell, and LanguageTool."
+  ;;    (interactive)
+  ;;    (let* ((current-dictionary ispell-current-dictionary)
+  ;;           (new-dictionary (if (string= current-dictionary "en_US") "en_US")))
+  ;;      (flyspell-buffer)
+  ;;      (message "[✓] Dictionary switched to %s" new-dictionary)))
+  ;;  :custom
+  ;;  (ispell-hunspell-dict-paths-alist
+  ;;   '(("en_US" "~Library/Spelling")))
+  ;;  ;; Save words in the personal dictionary without asking.
+  ;;  (ispell-silently-savep t)
+  ;;  :config
+  ;;  (setenv "LANG" "en_US")
+  ;;  (cond ((executable-find "aspell")
+  ;;         (setq ispell-program-name "aspell")
+  ;;         (setq ispell-local-dictionary-alist '(("en_US"
+  ;;                                                "[[:alpha:]]"
+  ;;                                                "[^[:alpha:]]"
+  ;;                                                "['’-]"
+  ;;                                                t
+  ;;                                                ("-d" "en_US" )
+  ;;                                                nil
+  ;;                                                  utf-8))))
+  ;;          ((executable-find "aspell")
+  ;;           (setq ispell-program-name "aspell")
+  ;;           (setq ispell-extra-args '("--sug-mode=ultra"))))
+  ;;    ;; Ignore file sections for spell checking.
+  ;;    (add-to-list 'ispell-skip-region-alist '("#\\+begin_align" . "#\\+end_align"))
+  ;;    (add-to-list 'ispell-skip-region-alist '("#\\+begin_align*" . "#\\+end_align*"))
+  ;;    (add-to-list 'ispell-skip-region-alist '("#\\+begin_equation" . "#\\+end_equation"))
+  ;;    (add-to-list 'ispell-skip-region-alist '("#\\+begin_equation*" . "#\\+end_equation*"))
+  ;;    (add-to-list 'ispell-skip-region-alist '("#\\+begin_example" . "#\\+end_example"))
+  ;;    (add-to-list 'ispell-skip-region-alist '("#\\+begin_labeling" . "#\\+end_labeling"))
+  ;;    (add-to-list 'ispell-skip-region-alist '("#\\+begin_src" . "#\\+end_src"))
+  ;;    (add-to-list 'ispell-skip-region-alist '("\\$" . "\\$"))
+  ;;    (add-to-list 'ispell-skip-region-alist '(org-property-drawer-re))
+  ;;    (add-to-list 'ispell-skip-region-alist '(":\\(PROPERTIES\\|LOGBOOK\\):" . ":END:")))
     #+end_src
     
 ** general
@@ -500,6 +539,17 @@ used to find key bindings available
     ([remap describe-command] . helpful-command)
     ([remap describe-variable] . counsel-describe-variable)
     ([remap describe-key] . helpful-key))
+ #+end_src
+
+** highlight-indent
+from https://github.com/DarthFennec/highlight-indent-guides
+#+begin_src emacs-lisp
+    (use-package highlight-indent-guides
+      :ensure nil
+      :hook (prog-mode . highlight-indent-guides-mode)
+      :init
+      (setq highlight-indent-guides-method 'character)
+      )
  #+end_src
 
 ** history
@@ -568,32 +618,32 @@ The main benefit of using Language Server Protocol (LSP) to configure the manage
 
 We need a Language Server Protocol (LSP) client to use different LSP servers according to the programming languages that we would like to use. That’s where lsp-mode comes in!
 #+begin_src emacs-lisp
-  (use-package lsp-mode
-    :commands (lsp lsp-deferred)
-    :hook ((prog-mode . lsp-deferred)
-           (lsp-mode . lsp-enable-which-key-integration))
-    :custom
-    (lsp-enable-folding nil)
-    (lsp-enable-links nil)
-    (lsp-enable-snippet nil)
-    (lsp-keymap-prefix "C-c ;")
-    ;;(lsp-session-file (expand-file-name (format "%s/emacs/lsp-session-v1"  xdg-data)))
-    (read-process-output-max (* 1024 1024)))
-
-  ;; additional information on variables
-  (use-package lsp-ui
-    :hook (lsp-mode . lsp-ui-mode))
-
-  ;; navigate errors
-  (use-package consult-lsp
-    :commands (consult-lsp-diagnostics consult-lsp-symbols))
-
-  ;; debugger
-  (use-package dap-mode
-    :after lsp-mode
-    :config
-    (dap-mode t)
-    (dap-ui-mode t))
+;;  (use-package lsp-mode
+;;    :commands (lsp lsp-deferred)
+;;    :hook ((prog-mode . lsp-deferred)
+;;           (lsp-mode . lsp-enable-which-key-integration))
+;;    :custom
+;;    (lsp-enable-folding nil)
+;;    (lsp-enable-links nil)
+;;    (lsp-enable-snippet nil)
+;;    (lsp-keymap-prefix "C-c ;")
+;;    ;;(lsp-session-file (expand-file-name (format "%s/emacs/lsp-session-v1"  xdg-data)))
+;;    (read-process-output-max (* 1024 1024)))
+;; 
+;;  ;; additional information on variables
+;;  (use-package lsp-ui
+;;    :hook (lsp-mode . lsp-ui-mode))
+;; 
+;;  ;; navigate errors
+;;  (use-package consult-lsp
+;;    :commands (consult-lsp-diagnostics consult-lsp-symbols))
+;; 
+;;  ;; debugger
+;;  (use-package dap-mode
+;;    :after lsp-mode
+;;    :config
+;;    (dap-mode t)
+;;    (dap-ui-mode t))
 #+end_src
 
 ** magit
